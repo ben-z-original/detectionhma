@@ -9,10 +9,12 @@ from config import cfg, assert_and_infer_cfg
 from patcher import split_in_chunks, merge_from_chunks
 
 
-class Inference:
-    def __init__(self, patch_size=1984, padding=32, model_path="./seg_weights/best_checkpoint_ep650.pth"):
+class InferenceHMA:
+    def __init__(self, patch_size=1984, padding=32, scales=[0.25, 0.5, 1.0],
+                 model_path="./seg_weights/best_checkpoint_ep650.pth"):
         # set configs
-        cfg.MODEL.N_SCALES = [0.25, 0.5, 1.0]
+        cfg.immutable(False)
+        cfg.MODEL.N_SCALES = scales
         assert_and_infer_cfg(None, train_mode=False)
         self.patch_size = patch_size
         self.padding = padding
@@ -21,7 +23,7 @@ class Inference:
         self.net = MscaleOCR(7, criterion=None)
         self.net.cuda()
         self.net = torch.nn.DataParallel(self.net)
-        checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+        checkpoint = torch.load(os.path.join(os.path.dirname(__file__), model_path), map_location=torch.device('cpu'))
         restore_net(self.net, checkpoint)
         self.net.eval()
 
@@ -31,12 +33,12 @@ class Inference:
         images = torch.unsqueeze(images, 0)
 
         inputs = {'images': images,
-                  'gts': (images[:, :, :, 0] * 0).type(torch.long)}  # torch.zeros((1, h, w), dtype=torch.long)}
+                  'gts': (images[:, :, :, 0] * 0).type(torch.long)}
         inputs = {k: v.cuda() for k, v in inputs.items()}
 
         res = self.net(inputs)
 
-        inputs = None
+        # inputs = None
         del inputs
 
         return res
@@ -50,7 +52,7 @@ class Inference:
         with torch.no_grad():
             for chunk in tqdm(chunks):
                 # inference
-                output_dict = infer.run(chunk)
+                output_dict = self.run(chunk)
 
                 for key in output_dict.keys():
                     _pred = output_dict[key]
@@ -90,7 +92,6 @@ class Inference:
             attn_tmp = softmax(attn_tmp, axis=-1)
             for i, key in enumerate(attn.keys()):
                 attn[key] = np.uint8(attn_tmp[..., i] * 255)
-                # cv2.imwrite("./images/" + ff.replace(".", f"_{key}."), attn[key])
         else:
             attn = None
 
@@ -100,17 +101,15 @@ class Inference:
             if key == "pred":
                 for i in range(7):
                     pred[f"{key}_{i}"] = np.uint8(pred_tmp[..., i] * 255)
-                    # cv2.imwrite("./images/" + ff.replace(".", f"_{key}_{i}."), np.uint8(pred_tmp[..., i] * 255))
             pred_tmp = np.argmax(pred_tmp, axis=-1)
-            pred_tmp = self.class2color_print2(pred_tmp)
+            pred_tmp = self.class2color(pred_tmp)
             pred_tmp = cv2.cvtColor(pred_tmp, cv2.COLOR_RGB2BGR)
             pred[key] = pred_tmp
-            # cv2.imwrite("./images/" + ff.replace(".", f"_{key}."), pred_tmp)
 
         return pred, attn
 
     @staticmethod
-    def class2color_print2(pred):
+    def class2color(pred):
         res = np.stack((pred,) * 3, axis=-1)
         res[np.where((res == [0, 0, 0]).all(axis=2))] = [255, 255, 255]
         res[np.where((res == [1, 1, 1]).all(axis=2))] = [0, 0, 0]
@@ -120,6 +119,30 @@ class Inference:
         res[np.where((res == [5, 5, 5]).all(axis=2))] = [77, 175, 74]
         res[np.where((res == [6, 6, 6]).all(axis=2))] = [152, 78, 163]
         return np.uint8(res)
+
+    @staticmethod
+    def lab2class(lab):
+        lab_mapped = lab * 0
+        lab[lab < 200] = 0
+        lab_mapped[np.where((lab == [255, 255, 255]).all(axis=2))] = [1, 1, 1]
+        lab_mapped[np.where((lab == [255, 0, 0]).all(axis=2))] = [2, 2, 2]
+        lab_mapped[np.where((lab == [255, 255, 0]).all(axis=2))] = [3, 3, 3]
+        lab_mapped[np.where((lab == [0, 255, 255]).all(axis=2))] = [4, 4, 4]
+        lab_mapped[np.where((lab == [0, 255, 0]).all(axis=2))] = [5, 5, 5]
+        lab_mapped[np.where((lab == [0, 0, 255]).all(axis=2))] = [6, 6, 6]
+        return np.uint8(lab_mapped[..., 0])
+
+    @staticmethod
+    def pred2class(pred):
+        lab_mapped = pred * 0
+        lab_mapped[np.where((pred == [255, 255, 255]).all(axis=2))] = [0, 0, 0]
+        lab_mapped[np.where((pred == [0, 0, 0]).all(axis=2))] = [1, 1, 1]
+        lab_mapped[np.where((pred == [228, 26, 28]).all(axis=2))] = [2, 2, 2]
+        lab_mapped[np.where((pred == [255, 127, 0]).all(axis=2))] = [3, 3, 3]
+        lab_mapped[np.where((pred == [55, 126, 184]).all(axis=2))] = [4, 4, 4]
+        lab_mapped[np.where((pred == [77, 175, 74]).all(axis=2))] = [5, 5, 5]
+        lab_mapped[np.where((pred == [152, 78, 163]).all(axis=2))] = [6, 6, 6]
+        return np.uint8(lab_mapped[..., 0])
 
     @staticmethod
     def normalize(img):
@@ -133,24 +156,25 @@ class Inference:
 
 if __name__ == "__main__":
 
-    infer = Inference(patch_size=1984, padding=32)
+    infer = InferenceHMA(patch_size=1984, padding=32)
 
-    source_dir = "/media/chrisbe/9812080e-2b1a-498a-81e8-99b092601af4/data/referenzobjekte/talbruecke_bruenn/2021_09_08_Jakob/bundler_segments/202008/images"
-    target_dir = "/media/chrisbe/9812080e-2b1a-498a-81e8-99b092601af4/data/referenzobjekte/talbruecke_bruenn/2021_09_08_Jakob/bundler_segments/202008/predictions"
+    source_dir = "/media/******/test/"
+    target_dir = "/home/*******/predictions"
 
     files = os.listdir(source_dir)
     files.sort()
 
     for ff in files:
 
-        if os.path.exists(os.path.join(target_dir, ff.replace(".", f"_{key}."))):
+        if os.path.exists(os.path.join(target_dir, ff.replace(".", f"_pred."))) or "_lab" in ff or "_out" in ff:
+            print("SKIP: ", os.path.join(target_dir, ff.replace(".", f"_pred.")))
             continue
 
         img = cv2.imread(os.path.join(source_dir, ff), cv2.IMREAD_COLOR)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        img = Inference.normalize(img)
-        pred, attn = infer.run_large(img, attention=False)
+        img = InferenceHMA.normalize(img)
+        pred, attn = infer.run_large(img, attention=True)
 
         for key in pred.keys():
             cv2.imwrite(os.path.join(target_dir, ff.replace(".", f"_{key}.")), pred[key])
@@ -158,6 +182,4 @@ if __name__ == "__main__":
         if not attn is None:
             for key in attn.keys():
                 print(key, type(attn[key]))
-                cv2.imwrite("./images/" + ff.replace(".", f"_{key}."), attn[key])
-
-
+                cv2.imwrite(os.path.join(target_dir, ff.replace(".", f"_{key}.")), attn[key])
