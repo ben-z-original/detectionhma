@@ -11,7 +11,7 @@ from patcher import split_in_chunks, merge_from_chunks
 
 class InferenceHMA:
     def __init__(self, patch_size=1984, padding=32, scales=[0.25, 0.5, 1.0],
-                 model_path="./seg_weights/best_checkpoint_ep650.pth"):
+                 model_path=cfg.ASSETS_PATH + "/seg_weights/best_checkpoint_ep650.pth"):
         # set configs
         cfg.immutable(False)
         cfg.MODEL.N_SCALES = scales
