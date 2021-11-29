@@ -49,7 +49,7 @@ cfg = __C
 __C.GLOBAL_RANK = 0
 __C.EPOCH = 0
 # Absolute path to a location to keep some large files, not in this dir.
-__C.ASSETS_PATH = '/home/dcg-adlr-atao-data.cosmos277/assets'
+__C.ASSETS_PATH = '.'
 
 # Use class weighted loss per batch to increase loss for low pixel count classes per batch
 __C.BATCH_WEIGHTING = False
@@ -96,8 +96,8 @@ __C.DATASET.CITYSCAPES_SPLITS = 3
 __C.DATASET.MEAN = [0.485, 0.456, 0.406]
 __C.DATASET.STD = [0.229, 0.224, 0.225]
 __C.DATASET.NAME = ''
-__C.DATASET.NUM_CLASSES = 0
-__C.DATASET.IGNORE_LABEL = 255
+__C.DATASET.NUM_CLASSES = 7
+__C.DATASET.IGNORE_LABEL = 7
 __C.DATASET.DUMP_IMAGES = False
 __C.DATASET.CLASS_UNIFORM_PCT = 0.5
 __C.DATASET.CLASS_UNIFORM_TILE = 1024
@@ -118,7 +118,7 @@ __C.DATASET.CROP_SIZE = '896'
 
 __C.MODEL = AttrDict()
 __C.MODEL.BN = 'regularnorm'
-__C.MODEL.BNFUNC = None
+__C.MODEL.BNFUNC = torch.nn.BatchNorm2d
 __C.MODEL.MSCALE = False
 __C.MODEL.THREE_SCALE = False
 __C.MODEL.ALT_TWO_SCALE = False
@@ -195,7 +195,10 @@ def torch_version_float():
     version_re = re.search(r'^([0-9]+\.[0-9]+)', version_str)
     if version_re:
         version = float(version_re.group(1))
-        logx.msg(f'Torch version: {version}, {version_str}')
+        try:
+            logx.msg(f'Torch version: {version}, {version_str}')
+        except:
+            print(f'Torch version: {version}, {version_str}')
     else:
         version = 1.0
         logx.msg(f'Can\'t parse torch version ({version}), assuming {version}')

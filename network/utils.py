@@ -137,7 +137,7 @@ def get_trunk(trunk_name, output_stride=8):
     else:
         raise 'unknown backbone {}'.format(trunk_name)
 
-    logx.msg("Trunk: {}".format(trunk_name))
+#    logx.msg("Trunk: {}".format(trunk_name))
     return backbone, s2_ch, s4_ch, high_level_ch
 
 

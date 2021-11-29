@@ -449,7 +449,7 @@ class HighResolutionNet(nn.Module):
         return None, None, feats
 
     def init_weights(self, pretrained=cfg.MODEL.HRNET_CHECKPOINT):
-        logx.msg('=> init weights from normal distribution')
+#        logx.msg('=> init weights from normal distribution')
         for name, m in self.named_modules():
             if any(part in name for part in {'cls', 'aux', 'ocr'}):
                 # print('skipped', name)
@@ -462,7 +462,7 @@ class HighResolutionNet(nn.Module):
         if os.path.isfile(pretrained):
             pretrained_dict = torch.load(pretrained,
                                          map_location={'cuda:0': 'cpu'})
-            logx.msg('=> loading pretrained model {}'.format(pretrained))
+#            logx.msg('=> loading pretrained model {}'.format(pretrained))
             model_dict = self.state_dict()
             pretrained_dict = {k.replace('last_layer',
                                          'aux_head').replace('model.', ''): v
