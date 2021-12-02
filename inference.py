@@ -97,10 +97,13 @@ class InferenceHMA:
 
         # predictions
         for key in list(pred.keys()):
+
             pred_tmp = merge_from_chunks(pred[key], img.shape[0], img.shape[1], 7, self.patch_size, self.padding)
+
             if key == "pred":
                 for i in range(7):
                     pred[f"{key}_{i}"] = np.uint8(pred_tmp[..., i] * 255)
+
             pred_tmp = np.argmax(pred_tmp, axis=-1)
             pred_tmp = self.class2color(pred_tmp)
             pred_tmp = cv2.cvtColor(pred_tmp, cv2.COLOR_RGB2BGR)
@@ -110,15 +113,22 @@ class InferenceHMA:
 
     @staticmethod
     def class2color(pred):
+        col = np.zeros((256, 3), np.uint8)
+        col[0, ...] = [255, 255, 255]
+        col[1, ...] = [0, 0, 0]
+        col[2, ...] = [228, 26, 28]
+        col[3, ...] = [255, 127, 0]
+        col[4, ...] = [55, 126, 184]
+        col[5, ...] = [77, 175, 74]
+        col[6, ...] = [152, 78, 163]
+
         res = np.stack((pred,) * 3, axis=-1)
-        res[np.where((res == [0, 0, 0]).all(axis=2))] = [255, 255, 255]
-        res[np.where((res == [1, 1, 1]).all(axis=2))] = [0, 0, 0]
-        res[np.where((res == [2, 2, 2]).all(axis=2))] = [228, 26, 28]
-        res[np.where((res == [3, 3, 3]).all(axis=2))] = [255, 127, 0]
-        res[np.where((res == [4, 4, 4]).all(axis=2))] = [55, 126, 184]
-        res[np.where((res == [5, 5, 5]).all(axis=2))] = [77, 175, 74]
-        res[np.where((res == [6, 6, 6]).all(axis=2))] = [152, 78, 163]
-        return np.uint8(res)
+        res = np.uint8(res)
+        res[..., 0] = cv2.LUT(res[..., 0], col[..., 0])
+        res[..., 1] = cv2.LUT(res[..., 1], col[..., 1])
+        res[..., 2] = cv2.LUT(res[..., 2], col[..., 2])
+
+        return res
 
     @staticmethod
     def lab2class(lab):
