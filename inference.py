@@ -21,6 +21,7 @@ class InferenceHMA:
 
         # load net
         self.net = MscaleOCR(7, criterion=None)
+        self.net.training = False
         self.net.cuda()
         self.net = torch.nn.DataParallel(self.net)
         checkpoint = torch.load(os.path.join(os.path.dirname(__file__), model_path), map_location=torch.device('cpu'))
@@ -32,9 +33,7 @@ class InferenceHMA:
         images = images.permute(2, 0, 1)
         images = torch.unsqueeze(images, 0)
 
-        inputs = {'images': images,
-                  'gts': (images[:, :, :, 0] * 0).type(torch.long)}
-        inputs = {k: v.cuda() for k, v in inputs.items()}
+        inputs = {'images': images.cuda()}
 
         res = self.net(inputs)
 
