@@ -2,6 +2,8 @@ import os
 import cv2
 import torch
 import numpy as np
+import matplotlib
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 from network.ocrnet import MscaleOCR
 from loss.optimizer import restore_net
@@ -104,8 +106,6 @@ class InferenceHMA:
                     pred[f"{key}_{i}"] = np.uint8(pred_tmp[..., i] * 255)
 
             pred_tmp = np.argmax(pred_tmp, axis=-1)
-            pred_tmp = self.class2color(pred_tmp)
-            pred_tmp = cv2.cvtColor(pred_tmp, cv2.COLOR_RGB2BGR)
             pred[key] = pred_tmp
 
         return pred, attn
@@ -128,6 +128,21 @@ class InferenceHMA:
         res[..., 2] = cv2.LUT(res[..., 2], col[..., 2])
 
         return res
+
+    @staticmethod
+    def imwrite_colormap(path, img):
+        colors = np.array([
+            [255, 255, 255],
+            [0, 0, 0],
+            [228, 26, 28],
+            [255, 127, 0],
+            [55, 126, 184],
+            [77, 175, 74],
+            [152, 78, 163]]) / 255
+        colors = colors[np.unique(img)]
+        colormap = matplotlib.colors.ListedColormap(colors, name='my_colormap_name')
+        path = '.'.join(path.split(".")[:-1] + ["png"])
+        plt.imsave(path, img, cmap=colormap)
 
     @staticmethod
     def lab2class(lab):
