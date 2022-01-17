@@ -139,7 +139,7 @@ class InferenceHMA:
             [55, 126, 184],
             [77, 175, 74],
             [152, 78, 163]]) / 255
-        colors = colors[np.unique(img)]
+        colors = colors[:np.max(img)+1, :]
         colormap = matplotlib.colors.ListedColormap(colors, name='my_colormap_name')
         path = '.'.join(path.split(".")[:-1] + ["png"])
         plt.imsave(path, img, cmap=colormap)
