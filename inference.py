@@ -182,28 +182,32 @@ if __name__ == "__main__":
 
     infer = InferenceHMA(patch_size=1984, padding=32)
 
-    source_dir = "/media/******/test/"
-    target_dir = "/home/*******/predictions"
+    source_dir = "./imgs/s2ds/test/"
+    target_dir = source_dir
 
     files = os.listdir(source_dir)
     files.sort()
 
-    for ff in files:
-
-        if os.path.exists(os.path.join(target_dir, ff.replace(".", f"_pred."))) or "_lab" in ff or "_out" in ff:
-            print("SKIP: ", os.path.join(target_dir, ff.replace(".", f"_pred.")))
+    for f in files:
+        if "_lab" in f or "_pred" in f or "_attn" in f:
             continue
 
-        img = cv2.imread(os.path.join(source_dir, ff), cv2.IMREAD_COLOR)
+        img = cv2.imread(os.path.join(source_dir, f), cv2.IMREAD_COLOR)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         img = InferenceHMA.normalize(img)
         pred, attn = infer.run_large(img, attention=True)
 
-        for key in pred.keys():
-            cv2.imwrite(os.path.join(target_dir, ff.replace(".", f"_{key}.")), pred[key])
+        # argmax
+        for key in list(pred.keys())[:4]:
+            InferenceHMA.imwrite_colormap(os.path.join(target_dir, f.replace(".", f"_{key}.")), pred[key])
+
+        # heatmaps
+        for key in list(pred.keys())[4:]:
+            cv2.imwrite(os.path.join(target_dir, f.replace(".", f"_{key}.")), pred[key])
 
         if not attn is None:
             for key in attn.keys():
                 print(key, type(attn[key]))
-                cv2.imwrite(os.path.join(target_dir, ff.replace(".", f"_{key}.")), attn[key])
+                cv2.imwrite(os.path.join(target_dir, f.replace(".", f"_{key}.")), attn[key])
+
