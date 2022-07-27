@@ -81,7 +81,7 @@ If dataset, weights, and dependencies are correctly prepared, you can run ``pyth
 
 ## Metric
 ### Line-based Tolerant Intersection-over-Union (ltIoU)
-
+![Attention Results](imgs/ltiou.jpg)
 
 ## More Results
 ### Attention
