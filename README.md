@@ -5,7 +5,7 @@ This repository hosts the code for the publication:
 
 **Image-based Detection of Structural Defects using Hierarchical Multi-Scale Attention**
 
-Benz, C., & Rodehorst, V. (2022). Image-based Detection of Structural Defects using Hierarchical Multi-Scale Attention. In *DAGM German Conference on Pattern Recognition*. Springer, Cham. [[Link](https://ben-z-original.github.io/2022_Benz_DetectionStructuralDefects.pdf)]
+Benz, C., & Rodehorst, V. (2022). Image-based Detection of Structural Defects using Hierarchical Multi-Scale Attention. In *DAGM German Conference on Pattern Recognition*. Springer, Cham. [[Paper](https://ben-z-original.github.io/2022_Benz_DetectionStructuralDefects.pdf)]
 
 Always cite the work properly:
 ```
