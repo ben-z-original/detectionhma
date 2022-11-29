@@ -5,7 +5,7 @@ This repository hosts the code for the publication:
 
 **Image-based Detection of Structural Defects using Hierarchical Multi-Scale Attention**
 
-Benz, C., & Rodehorst, V. (2022). Image-based Detection of Structural Defects using Hierarchical Multi-Scale Attention. In *DAGM German Conference on Pattern Recognition*. Springer, Cham.
+Benz, C., & Rodehorst, V. (2022). Image-based Detection of Structural Defects using Hierarchical Multi-Scale Attention. In *DAGM German Conference on Pattern Recognition*. Springer, Cham. [[Link](https://ben-z-original.github.io/2022_Benz_DetectionStructuralDefects.pdf)]
 
 Always cite the work properly:
 ```
@@ -41,7 +41,7 @@ conda create --name detectionhma_env python=3.8
 ```
 
 #### 2. Satisfy Dependencies
-Satisfy the dependencies either via ``pip install -r requirements.txt`` or manully for example by:
+Satisfy the dependencies either via ``pip install -r requirements.txt`` or manually for example by:
 ```
 pip install opencv-python
 pip install torch==1.8.2 torchvision==0.9.2 --extra-index-url https://download.pytorch.org/whl/lts/1.8/cu111
