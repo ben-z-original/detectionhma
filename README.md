@@ -69,7 +69,7 @@ Check that you placed the S2DS dataset properly according to the above instructi
 If dataset, weights, and dependencies are correctly prepared, you can run ``python inference.py``. The predictions will occur in the ``imgs/s2ds/test`` folder alongside the input images and the labels. The predictions are  indicated by infix ``_pred``, the attention maps by infix ``_attn`` . Please refer to the ``inference.py`` for more details. A simple inference typically looks like:
 ```
         img = cv2.imread(path, cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         img = InferenceHMA.normalize(img)
         pred, _ = infer.run_large(img)
