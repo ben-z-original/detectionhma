@@ -193,7 +193,7 @@ if __name__ == "__main__":
             continue
 
         img = cv2.imread(os.path.join(source_dir, f), cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         img = InferenceHMA.normalize(img)
         pred, attn = infer.run_large(img, attention=True)
