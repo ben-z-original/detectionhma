@@ -1,10 +1,12 @@
 import os
 import cv2
 import torch
-import numpy as np
+import argparse
 import matplotlib
-from matplotlib import pyplot as plt
+import numpy as np
 from tqdm import tqdm
+from pathlib import Path
+from matplotlib import pyplot as plt
 from network.ocrnet import MscaleOCR
 from loss.optimizer import restore_net
 from config import cfg, assert_and_infer_cfg
@@ -179,20 +181,24 @@ class InferenceHMA:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser("Run DetectionHMA for the detection of structural defects.")
+    parser.add_argument("images_dir", type=str, help="Folder with input images.")
+    parser.add_argument("predictions_dir", type=str, help="Folder to store the predictions.")
+    args = parser.parse_args()
 
     infer = InferenceHMA(patch_size=1984, padding=32)
 
-    source_dir = "./imgs/s2ds/test/"
-    target_dir = source_dir
+    source_dir = Path(args.images_dir)
+    target_dir = Path(args.predictions_dir)
 
-    files = os.listdir(source_dir)
-    files.sort()
+    files = source_dir.glob("*")
+    files = sorted(files)
 
     for f in files:
-        if "_lab" in f or "_pred" in f or "_attn" in f:
-            continue
+        if 0 < len(list(target_dir.glob(f"{f.stem}*"))):
+            raise RuntimeError(f"The prediction file already exists: {f.name}.")
 
-        img = cv2.imread(os.path.join(source_dir, f), cv2.IMREAD_COLOR)
+        img = cv2.imread(str(f), cv2.IMREAD_COLOR)
         #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         img = InferenceHMA.normalize(img)
@@ -200,14 +206,17 @@ if __name__ == "__main__":
 
         # argmax
         for key in list(pred.keys())[:4]:
-            InferenceHMA.imwrite_colormap(os.path.join(target_dir, f.replace(".", f"_{key}.")), pred[key])
+            path = (target_dir / (f.stem + f"_{key}")).with_suffix(".png")
+            InferenceHMA.imwrite_colormap(str(path), pred[key])
 
         # heatmaps
         for key in list(pred.keys())[4:]:
-            cv2.imwrite(os.path.join(target_dir, f.replace(".", f"_{key}.")), pred[key])
+            path = (target_dir / (f.stem + f"_{key}")).with_suffix(".png")
+            cv2.imwrite(str(path), pred[key])
 
         if not attn is None:
             for key in attn.keys():
                 print(key, type(attn[key]))
-                cv2.imwrite(os.path.join(target_dir, f.replace(".", f"_{key}.")), attn[key])
+                path = (target_dir / (f.stem + f"_{key}")).with_suffix(".png")
+                cv2.imwrite(str(path), attn[key])
 
