@@ -186,6 +186,8 @@ if __name__ == "__main__":
     parser.add_argument("predictions_dir", type=str, help="Folder to store the predictions.")
     args = parser.parse_args()
 
+    torch.cuda.empty_cache()
+
     infer = InferenceHMA(patch_size=1984, padding=32)
 
     source_dir = Path(args.images_dir)
@@ -197,7 +199,7 @@ if __name__ == "__main__":
     for f in files:
         if 0 < len(list(target_dir.glob(f"{f.stem}*"))):
             raise RuntimeError(f"The prediction file already exists: {f.name}.")
-
+      
         img = cv2.imread(str(f), cv2.IMREAD_COLOR)
         #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -219,4 +221,8 @@ if __name__ == "__main__":
                 print(key, type(attn[key]))
                 path = (target_dir / (f.stem + f"_{key}")).with_suffix(".png")
                 cv2.imwrite(str(path), attn[key])
+
+
+    torch.cuda.empty_cache()
+  
 
