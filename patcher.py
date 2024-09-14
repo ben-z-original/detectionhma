@@ -6,8 +6,8 @@ def split_in_chunks(img, size=448, pad=0):
     h, w, c = img.shape
 
     # number of required patches
-    steps_h = h // (size + 1) + 1
-    steps_w = w // (size + 1) + 1
+    steps_h = int(np.ceil(h / size))
+    steps_w = int(np.ceil(w / size))
 
     # create padding (top, bottom, left, right)
     img_tmp = np.pad(img, ((pad, size - h % size + pad), (pad, size - w % size + pad), (0, 0)), mode='reflect')
@@ -28,8 +28,8 @@ def split_in_chunks(img, size=448, pad=0):
 def merge_from_chunks(patches, targ_h, targ_w, targ_c=1, size=448, pad=0):
     """ Merges the patches (resp. tiles) into one image"""
     # determine temporary size
-    steps_h = targ_h // (size + 1) + 1
-    steps_w = targ_w // (size + 1) + 1
+    steps_h = int(np.ceil(targ_h / size))
+    steps_w = int(np.ceil(targ_w / size))
 
     # create dummy for result
     img_merged = np.zeros((steps_h * size, steps_w * size, targ_c))
